@@ -1,22 +1,35 @@
 
-import { useState } from "react";
+import { useState, useCallback} from "react";
 import Cropper from 'react-easy-crop';
-import { readFile } from "../../main/helpers";
+import { Area } from 'react-easy-crop/types';
+import { readFile, cropImageData } from "../../main/helpers";
 
 export default function PhotoCrop() {
     const [imageSrc, setImageSrc] = useState(null);//file data
     const [fileName, setFileName] = useState(null);//file address
     const [crop, setCrop] = useState({ x: 0, y: 0})
-    const [zoom, setZoom] = useState(1)
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>();
 
-    const handleSave = () => {
+    const handleSave = async () => {
         //1. save cropped image
-        //2.saveCrop
-        //3.
-        setImageSrc(null);
-        setZoom(1);
-        setCrop({ x: 0, y: 0});
+        if(croppedAreaPixels && imageSrc) {
+            //need the base64data
+            const base64data = await cropImageData(imageSrc, croppedAreaPixels);
+            const newFileName = fileName + '-cropped.png';
+            window.electron.saveCroppedImage([newFileName, base64data]);//electron saves it for us cause react cant
+            //2. saveCroppedImage(fileName, imageSrc, croppedAreaPixels);
+            //3. rest for the next photo
+            setImageSrc(null);
+            setZoom(1);
+            setCrop({ x: 0, y: 0});
+        }
     }
+
+    const onCropComplete = useCallback((croppedArea: Area, currentCroppedAreaPixels: Area) => {
+        setCroppedAreaPixels(currentCroppedAreaPixels);
+    }, []);
+
     const handleFileChange = async (e: any) => {
         if(e.target.files && e.target.files.length) {
             //we got a file...
@@ -43,6 +56,7 @@ return (
      zoom={zoom}
      onCropChange={setCrop}
      onZoomChange={setZoom} 
+     onCropComplete={onCropComplete}
      />
      <button onClick={handleSave} className="save-btn">Save</button>
     </>
