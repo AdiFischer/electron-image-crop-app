@@ -1,10 +1,13 @@
 
-import { useState } from "react"
+import { useState } from "react";
+import Cropper from 'react-easy-crop';
 import { readFile } from "../../main/helpers";
 
 export default function PhotoCrop() {
     const [imageSrc, setImageSrc] = useState(null);//file data
     const [fileName, setFileName] = useState(null);//file address
+    const [crop, setCrop] = useState({ x: 0, y: 0})
+    const [zoom, setZoom] = useState(1)
     const handleFileChange = async (e: any) => {
         if(e.target.files && e.target.files.length) {
             //we got a file...
@@ -19,14 +22,19 @@ export default function PhotoCrop() {
         return(
             <>
         <h1>Please choose photo to crop</h1>
-        <input type="text" accept="image/*" onChange={handleFileChange} />
-        
+        <input type="file" accept="image/*" onChange={handleFileChange} />
         </>
     )
 }
 return (
     <>
-    <img src={imageSrc} alt="" />
+    <Cropper
+     image={imageSrc} 
+     crop={crop}
+     zoom={zoom}
+     onCropChange={setCrop}
+     onZoomChange={setZoom} 
+     />
     </>
 )
 }
